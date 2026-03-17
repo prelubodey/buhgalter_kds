@@ -15,8 +15,8 @@ if [ ! -d ".git" ]; then
 fi
 
 # Запрос данных для .env
-read -p "Введите TELEGRAM_TOKEN: " tg_token
-read -p "Введите ALLOWED_USER_ID: " user_id
+read -p "Введите TELEGRAM_TOKEN: " tg_token </dev/tty
+read -p "Введите ALLOWED_USER_ID: " user_id </dev/tty
 
 cat <<EOF > .env
 TELEGRAM_TOKEN=$tg_token
