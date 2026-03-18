@@ -1,7 +1,7 @@
 services:
   buhgalter_bot:
     build: .
-    container_name: accountant-ai-monitor
+    container_name: my-finance-bot
     restart: always
     env_file: .env
     volumes:

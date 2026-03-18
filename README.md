@@ -35,5 +35,5 @@ docker ps -a
 ```
 Посмотреть логи в реальном времени	
 ```bash
-docker logs -f accountant-ai-monitor
+docker logs -f my-finance-bot
 ```
