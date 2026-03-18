@@ -3,8 +3,10 @@
 curl -sSL https://raw.githubusercontent.com/prelubodey/buhgalter_kds/main/setup.sh | bash
 ```
 
-Перейдите в папку: cd /root/projects/straga_monitor
-
+Перейдите в папку: 
+```bash
+cd /root/projects/buhgalter_kds
+```
 Остановить бота:
 ```bash
 docker compose stop
