@@ -1,0 +1,8 @@
+services:
+  buhgalter_bot:
+    build: .
+    container_name: accountant-ai-monitor
+    restart: always
+    env_file: .env
+    volumes:
+      - ./data:/app/data  # Эта строка сохраняет базу на диске сервера

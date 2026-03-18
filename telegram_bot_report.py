@@ -17,11 +17,13 @@ logging.basicConfig(
 )
 
 # 2. Получение настроек из переменных окружения 
-TOKEN = os.getenv("TELEGRAM_TOKEN")
-# Преобразуем ID в int, так как из env он приходит строкой
-ALLOWED_USER_ID = int(os.getenv("ALLOWED_USER_ID", 0))
-# Используем путь к JSON из окружения или дефолтный в текущей папке
-TRANSACTIONS_FILE = os.getenv("TRANSACTIONS_JSON_PATH", "transactions.json")
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN") # Привел к единому стандарту
+ALLOWED_USER_ID = int(os.getenv("TELEGRAM_CHAT_ID", 0)) 
+TRANSACTIONS_FILE = "data/transactions.json" # Храним в подпапке для удобства монтирования
+
+# Создаем папку для базы, если её нет
+if not os.path.exists("data"):
+    os.makedirs("data")
 
 def load_data():
     if os.path.exists(TRANSACTIONS_FILE):
@@ -48,7 +50,6 @@ current_transactions = data.get("transactions", [])
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global current_balance, current_transactions
     
-    # Проверка доступа по ID из .env 
     if update.message.from_user.id != ALLOWED_USER_ID:
         return
 
@@ -66,7 +67,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await generate_report(update, context)
             return
 
-        # Парсинг транзакции (например, +300 Леша)
         match = re.match(r'([+-]?\d+)\s+(.+)', text)
         if match:
             amount = int(match.group(1))
@@ -92,7 +92,6 @@ async def generate_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("Нет данных для отчета.")
             return
 
-        # Генерация HTML-отчета
         html_content = f"""<html>
 <head><meta charset="utf-8"><title>Финансовый отчет</title></head>
 <body>
@@ -107,16 +106,16 @@ async def generate_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
 <p><strong>Итоговый баланс:</strong> {current_balance}</p>
 </body></html>"""
 
-        report_file = "report.html"
+        report_file = "data/report.html"
         with open(report_file, "w", encoding='utf-8') as f:
             f.write(html_content)
         
         each_share = round(current_balance / 3, 2)
         
         with open(report_file, "rb") as doc:
-            await update.message.reply_document(document=doc, filename=report_file)
+            await update.message.reply_document(document=doc, filename="report.html")
         
-        await update.message.reply_text(f"📊 Итого: {current_balance}\n👥 Каждому (на 3): {each_share}")
+        await update.message.reply_text(f"������ Итого: {current_balance}\n������ Каждому (на 3): {each_share}")
         
     except Exception as e:
         logging.error(f"Ошибка генерации отчета: {e}")
@@ -125,8 +124,7 @@ async def generate_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.from_user.id == ALLOWED_USER_ID:
         await update.message.reply_text(
-            "Бот запущен.\n\n"
-            "Команды:\n"
+            "Бот запущен.\n\nКоманды:\n"
             "• +300 Имя — добавить доход\n"
             "• -500 Имя — добавить расход\n"
             "• итого — получить отчет\n"
@@ -135,20 +133,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     if not TOKEN:
-        print("Ошибка: TELEGRAM_TOKEN не найден в .env файле!")
+        print("Ошибка: TOKEN не найден!")
         return
 
-    try:
-        application = Application.builder().token(TOKEN).build()
-        
-        application.add_handler(CommandHandler("start", start))
-        application.add_handler(CommandHandler("itogo", generate_report))
-        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-        
-        print("Финансовый бот запущен...")
-        application.run_polling()
-    except Exception as e:
-        logging.error(f"Критическая ошибка запуска: {e}")
+    application = Application.builder().token(TOKEN).build()
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    
+    print("Бухгалтер запущен...")
+    application.run_polling()
 
 if __name__ == '__main__':
     main()
